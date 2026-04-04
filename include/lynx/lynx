@@ -1,0 +1,10 @@
+#pragma once
+
+//  master include — users only ever touch this file.
+//
+//  #include <lynx/lynx>
+
+#include "config.hpp"
+#include "core/base.hpp"
+#include "protocols/all.hpp"
+#include "net/io.hpp"
