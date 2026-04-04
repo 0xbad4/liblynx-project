@@ -20,7 +20,7 @@ ip / tcp;
 iface.send(ip);
 
 // capture
-iface.recv([](const RawFrame& raw) {
+iface.capture([](const RawFrame& raw) {
     if (raw.type() == FrameType::Eth) {
         auto eth = raw.as<Ether>();
         auto ip  = eth->as<IPv4>();
@@ -52,21 +52,6 @@ iface.recv([](const RawFrame& raw) {
 - C++17
 - GCC or Clang
 - root / `CAP_NET_RAW` to open raw sockets
-
----
-
-## build
-
-```bash
-# static (default)
-cmake -B build && cmake --build build
-
-# shared
-cmake -B build -DLYNX_SHARED=ON && cmake --build build
-
-# install
-cmake --install build --prefix /usr/local
-```
 
 ---
 
@@ -138,10 +123,10 @@ iface.send(eth);
 
 ## capture
 
-`recv` takes a blocking callback. call `iface.stop()` from another thread to exit.
+`capture` takes a blocking callback. call `iface.stop()` from another thread to exit.
 
 ```cpp
-iface.recv([](const RawFrame& raw) -> RecvAction {
+iface.capture([](const RawFrame& raw) -> RecvAction {
 
     if (raw.type() != FrameType::Eth)
         return RecvAction::Continue;
