@@ -66,7 +66,7 @@ namespace lynx::proto
                 if (hdr_.hlen != constants::ARP_HLEN_ETH || hdr_.plen != constants::ARP_PLEN_IPV4) {
                     set_error(Status::MalformedPacket, "ARP: invalid address lengths");
                     return;
-                }
+                } 
                 // no load in ARP
             }
 
@@ -100,6 +100,9 @@ namespace lynx::proto
                 hdr.ptype = __builtin_bswap16(hdr.ptype);
                 hdr.oper  = __builtin_bswap16(hdr.oper);
             }
+
+            [[nodiscard]] bool is_broadcast() const noexcept { return true; }
+
 
         protected:
             hdrs::HdrARP hdr_;
