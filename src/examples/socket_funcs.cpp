@@ -9,6 +9,7 @@ $ sudo ./sock_fun  # root privs required
 
 #include <lynx/lynx>
 #include <iostream>
+#include <cstring>
 
 using namespace lynx;
 
@@ -44,24 +45,17 @@ int main() {
         return 1;
     }
 
-    char iface_mac_str[18];
-    lynx::utils::mac_encode(iface_mac, iface_mac_str);
+    auto iface_mac_encoded = lynx::utils::mac_encode(iface_mac);
 
-    std::cout << "iface MAC: " << iface_mac_str << "\n";
+    std::cout << "iface MAC: " << iface_mac_encoded.data << "\n";
 
     // 4. random MAC
     uint8_t rnd_mac[6];
-    err = sock::randomize_mac(rnd_mac);
-    if (!err.ok()) {
-        std::cerr << "randomize_mac failed: " << err.what() << "\n";
-        close(fd);
-        return 1;
-    }
+    lynx::utils::buf_randomize(rnd_mac, 6);
 
-    char rnd_mac_str[18];
-    lynx::utils::mac_encode(rnd_mac, rnd_mac_str);
+    auto rnd_mac_encoded = lynx::utils::mac_encode(rnd_mac);
 
-    std::cout << "random MAC: " << rnd_mac_str << "\n";
+    std::cout << "random MAC: " << rnd_mac_encoded.data << "\n";
 
     // 5. ARP lookup
     uint8_t target_ip[4] = {100, 112, 0, 1};
@@ -75,13 +69,10 @@ int main() {
         return 1;
     }
 
-    char ip_str[16];
-    char target_mac_str[18];
+    auto ip_encoded = lynx::utils::ipv4_encode(target_ip);
+    auto target_mac_encoded = lynx::utils::mac_encode(target_mac);
 
-    lynx::utils::ipv4_encode(target_ip, ip_str);
-    lynx::utils::mac_encode(target_mac, target_mac_str);
-
-    std::cout << ip_str << " is at " << target_mac_str << "\n";
+    std::cout << ip_encoded.data << " is at " << target_mac_encoded.data << "\n";
 
 
     return 0;

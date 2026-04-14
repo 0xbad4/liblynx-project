@@ -50,7 +50,7 @@ namespace lynx::proto
 
                 // hlen / plen are 1 byte → no swap
                 buf.write(
-                    reinterpret_cast<const uint8_t*>(&wire), sizeof(hdrs::HdrIPv4)
+                    reinterpret_cast<const uint8_t*>(&wire), sizeof(hdrs::HdrARP)
                 );
             }
 
@@ -60,7 +60,7 @@ namespace lynx::proto
                     return;
                 }
 
-                __builtin_memcpy(&hdr_, data, sizeof(hdrs::HdrIPv4));
+                __builtin_memcpy(&hdr_, data, sizeof(hdrs::HdrARP));
                 swap_hdr_byte_order(hdr_);
 
                 if (hdr_.hlen != constants::ARP_HLEN_ETH || hdr_.plen != constants::ARP_PLEN_IPV4) {

@@ -1,6 +1,7 @@
 #include <lynx/lynx>
 #include <iostream>
 #include <chrono>
+#include <cstring>
 
 using namespace lynx;
 
@@ -13,10 +14,19 @@ void craft_ethernet_ipv4_tcp(io::Interface& iface) {
     uint8_t dst_mac[6], src_mac[6];
     uint8_t src_ip[4], dst_ip[4];
     
-    utils::mac_decode("e0:d4:64:db:d2:5b", dst_mac);
-    sock::randomize_mac(src_mac);
-    utils::ipv4_decode("192.168.137.90", src_ip);
-    utils::ipv4_decode("192.168.137.62", dst_ip);
+    {
+        auto decoded = utils::mac_decode("e0:d4:64:db:d2:5b");
+        std::memcpy(dst_mac, decoded.data, 6);
+    }
+    utils::buf_randomize(src_mac, 6);
+    {
+        auto decoded = utils::ipv4_decode("192.168.137.90");
+        std::memcpy(src_ip, decoded.data, 4);
+    }
+    {
+        auto decoded = utils::ipv4_decode("192.168.137.62");
+        std::memcpy(dst_ip, decoded.data, 4);
+    }
     
     // Craft L2 -> L3 -> L4 stack
     proto::Ether eth(dst_mac, src_mac, constants::ETH_TYPE_IPV4);
@@ -46,10 +56,19 @@ void craft_vlan_tagged_frame(io::Interface& iface) {
     uint8_t dst_mac[6], src_mac[6];
     uint8_t src_ip[4], dst_ip[4];
     
-    utils::mac_decode("ff:ff:ff:ff:ff:ff", dst_mac);    // broadcast
-    sock::randomize_mac(src_mac);
-    utils::ipv4_decode("10.0.0.1", src_ip);
-    utils::ipv4_decode("10.0.0.2", dst_ip);
+    {
+        auto decoded = utils::mac_decode("ff:ff:ff:ff:ff:ff");
+        std::memcpy(dst_mac, decoded.data, 6);
+    }    // broadcast
+    utils::buf_randomize(src_mac, 6);
+    {
+        auto decoded = utils::ipv4_decode("10.0.0.1");
+        std::memcpy(src_ip, decoded.data, 4);
+    }
+    {
+        auto decoded = utils::ipv4_decode("10.0.0.2");
+        std::memcpy(dst_ip, decoded.data, 4);
+    }
     
     // VLAN ID 100, Priority 5
     uint16_t tci = lynx::hdrs::HdrDot1Q::make_tci(5, false, 100);
@@ -79,10 +98,19 @@ void craft_arp_request(io::Interface& iface) {
     uint8_t target_ip[4], sender_ip[4];
     uint8_t zero_mac[6] = {0, 0, 0, 0, 0, 0};
     
-    utils::mac_decode("ff:ff:ff:ff:ff:ff", dst_mac);    // broadcast
-    sock::randomize_mac(src_mac);
-    utils::ipv4_decode("192.168.1.100", sender_ip);
-    utils::ipv4_decode("192.168.1.1", target_ip);
+    {
+        auto decoded = utils::mac_decode("ff:ff:ff:ff:ff:ff");
+        std::memcpy(dst_mac, decoded.data, 6);
+    }    // broadcast
+    utils::buf_randomize(src_mac, 6);
+    {
+        auto decoded = utils::ipv4_decode("192.168.1.100");
+        std::memcpy(sender_ip, decoded.data, 4);
+    }
+    {
+        auto decoded = utils::ipv4_decode("192.168.1.1");
+        std::memcpy(target_ip, decoded.data, 4);
+    }
     
     proto::Ether eth(dst_mac, src_mac, constants::ETH_TYPE_ARP);
     proto::ARP   arp(
@@ -114,9 +142,15 @@ void craft_arp_reply(io::Interface& iface, const uint8_t target_mac[6]) {
     uint8_t src_mac[6];
     uint8_t target_ip[4], sender_ip[4];
     
-    sock::randomize_mac(src_mac);
-    utils::ipv4_decode("192.168.1.1", sender_ip);
-    utils::ipv4_decode("192.168.1.100", target_ip);
+    utils::buf_randomize(src_mac, 6);
+    {
+        auto decoded = utils::ipv4_decode("192.168.1.1");
+        std::memcpy(sender_ip, decoded.data, 4);
+    }
+    {
+        auto decoded = utils::ipv4_decode("192.168.1.100");
+        std::memcpy(target_ip, decoded.data, 4);
+    }
     
     proto::Ether eth(target_mac, src_mac, constants::ETH_TYPE_ARP);
     proto::ARP   arp(
@@ -147,8 +181,11 @@ void craft_ipv6_tcp(io::Interface& iface) {
     uint8_t dst_mac[6], src_mac[6];
     uint8_t src_ipv6[16], dst_ipv6[16];
     
-    utils::mac_decode("33:33:ff:00:00:01", dst_mac);
-    sock::randomize_mac(src_mac);
+    {
+        auto decoded = utils::mac_decode("33:33:ff:00:00:01");
+        std::memcpy(dst_mac, decoded.data, 6);
+    }
+    utils::buf_randomize(src_mac, 6);
     
     // Example IPv6 addresses (simplified - normally would parse from strings)
     std::memset(src_ipv6, 0, 16);
@@ -182,10 +219,19 @@ void craft_tcp_variations(io::Interface& iface) {
     uint8_t dst_mac[6], src_mac[6];
     uint8_t src_ip[4], dst_ip[4];
     
-    utils::mac_decode("aa:bb:cc:dd:ee:ff", dst_mac);
-    sock::randomize_mac(src_mac);
-    utils::ipv4_decode("10.0.0.50", src_ip);
-    utils::ipv4_decode("10.0.0.100", dst_ip);
+    {
+        auto decoded = utils::mac_decode("aa:bb:cc:dd:ee:ff");
+        std::memcpy(dst_mac, decoded.data, 6);
+    }
+    utils::buf_randomize(src_mac, 6);
+    {
+        auto decoded = utils::ipv4_decode("10.0.0.50");
+        std::memcpy(src_ip, decoded.data, 4);
+    }
+    {
+        auto decoded = utils::ipv4_decode("10.0.0.100");
+        std::memcpy(dst_ip, decoded.data, 4);
+    }
     
     // TCP SYN packet
     {
@@ -261,10 +307,19 @@ void craft_udp_packets(io::Interface& iface) {
     uint8_t dst_mac[6], src_mac[6];
     uint8_t src_ip[4], dst_ip[4];
     
-    utils::mac_decode("00:11:22:33:44:55", dst_mac);
-    sock::randomize_mac(src_mac);
-    utils::ipv4_decode("192.168.0.50", src_ip);
-    utils::ipv4_decode("192.168.0.1", dst_ip);
+    {
+        auto decoded = utils::mac_decode("00:11:22:33:44:55");
+        std::memcpy(dst_mac, decoded.data, 6);
+    }
+    utils::buf_randomize(src_mac, 6);
+    {
+        auto decoded = utils::ipv4_decode("192.168.0.50");
+        std::memcpy(src_ip, decoded.data, 4);
+    }
+    {
+        auto decoded = utils::ipv4_decode("192.168.0.1");
+        std::memcpy(dst_ip, decoded.data, 4);
+    }
     
     // UDP DNS query (port 53)
     {
@@ -306,10 +361,19 @@ void craft_icmp_packets(io::Interface& iface) {
     uint8_t dst_mac[6], src_mac[6];
     uint8_t src_ip[4], dst_ip[4];
     
-    utils::mac_decode("ff:ff:ff:ff:ff:ff", dst_mac);
-    sock::randomize_mac(src_mac);
-    utils::ipv4_decode("192.168.1.100", src_ip);
-    utils::ipv4_decode("192.168.1.1", dst_ip);
+    {
+        auto decoded = utils::mac_decode("ff:ff:ff:ff:ff:ff");
+        std::memcpy(dst_mac, decoded.data, 6);
+    }
+    utils::buf_randomize(src_mac, 6);
+    {
+        auto decoded = utils::ipv4_decode("192.168.1.100");
+        std::memcpy(src_ip, decoded.data, 4);
+    }
+    {
+        auto decoded = utils::ipv4_decode("192.168.1.1");
+        std::memcpy(dst_ip, decoded.data, 4);
+    }
     
     // ICMP Echo Request (ping)
     {
@@ -361,8 +425,11 @@ void craft_icmpv6_packets(io::Interface& iface) {
     uint8_t dst_mac[6], src_mac[6];
     uint8_t src_ipv6[16], dst_ipv6[16];
     
-    utils::mac_decode("33:33:ff:00:00:01", dst_mac);
-    sock::randomize_mac(src_mac);
+    {
+        auto decoded = utils::mac_decode("33:33:ff:00:00:01");
+        std::memcpy(dst_mac, decoded.data, 6);
+    }
+    utils::buf_randomize(src_mac, 6);
     
     // Initialize IPv6 addresses
     std::memset(src_ipv6, 0, 16);
@@ -395,11 +462,23 @@ void craft_igmp_packets(io::Interface& iface) {
     uint8_t src_ip[4], dst_ip[4];
     uint8_t group_addr[4];
     
-    utils::mac_decode("01:00:5e:00:00:01", dst_mac);  // IGMP multicast MAC
-    sock::randomize_mac(src_mac);
-    utils::ipv4_decode("192.168.1.50", src_ip);
-    utils::ipv4_decode("224.0.0.1", dst_ip);
-    utils::ipv4_decode("224.0.0.1", group_addr);
+    {
+        auto decoded = utils::mac_decode("01:00:5e:00:00:01");
+        std::memcpy(dst_mac, decoded.data, 6);
+    }  // IGMP multicast MAC
+    utils::buf_randomize(src_mac, 6);
+    {
+        auto decoded = utils::ipv4_decode("192.168.1.50");
+        std::memcpy(src_ip, decoded.data, 4);
+    }
+    {
+        auto decoded = utils::ipv4_decode("224.0.0.1");
+        std::memcpy(dst_ip, decoded.data, 4);
+    }
+    {
+        auto decoded = utils::ipv4_decode("224.0.0.1");
+        std::memcpy(group_addr, decoded.data, 4);
+    }
     
     // IGMP v2 Membership Report
     {

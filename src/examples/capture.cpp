@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <iomanip>
+#include <sstream>
 
 using namespace lynx;
 
@@ -9,16 +10,14 @@ using namespace lynx;
 
 /** Print MAC address in dotted format */
 std::string format_mac(const uint8_t mac[6]) {
-    char buf[18];
-    utils::mac_encode(mac, buf);
-    return std::string(buf);
+    auto encoded = utils::mac_encode(mac);
+    return std::string(encoded.data);
 }
 
 /** Print IPv4 address in dotted decimal format */
 std::string format_ipv4(const uint8_t ip[4]) {
-    char buf[16];
-    utils::ipv4_encode(ip, buf);
-    return std::string(buf);
+    auto encoded = utils::ipv4_encode(ip);
+    return std::string(encoded.data);
 }
 
 /** Print hex value with optional prefix */
