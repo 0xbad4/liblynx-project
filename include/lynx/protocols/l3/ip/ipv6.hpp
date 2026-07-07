@@ -3,7 +3,10 @@
 
 //  IPv6 — L3 concrete implementation, inherits Packet.
 
-#include "packet.hpp"
+#include "protocols/l3/packet.hpp"
+#include "protocols/l2/eth/const.hpp"
+#include "hdrs.hpp"
+#include "const.hpp"
 
 namespace lynx::proto
 {
@@ -41,8 +44,8 @@ namespace lynx::proto
                 // use new header copy, as the bytes order will be swapped
                 hdrs::HdrIPv6 wire = hdr_;
                 
-                wire.ver_tc_fl = __builtin_bswap32(hdr_.ver_tc_fl);
-                wire.payload_len = __builtin_bswap16(
+                wire.ver_tc_fl = swap32(hdr_.ver_tc_fl);
+                wire.payload_len = swap16(
                     static_cast<uint16_t>(load_.size())  // IPv6 payload_len excludes the header
                 );
                 buf.write(
@@ -62,10 +65,10 @@ namespace lynx::proto
                 }
 
                 // copy header
-                __builtin_memcpy(&hdr_, data, sizeof(hdrs::HdrIPv6));
+                memory_copy(&hdr_, data, sizeof(hdrs::HdrIPv6));
 
-                hdr_.ver_tc_fl = __builtin_bswap32(hdr_.ver_tc_fl);
-                hdr_.payload_len = __builtin_bswap16(hdr_.payload_len);
+                hdr_.ver_tc_fl = swap32(hdr_.ver_tc_fl);
+                hdr_.payload_len = swap16(hdr_.payload_len);
 
                 if (hdr_.version() != constants::IPV6_VERSION) {
                     set_error(Status::MalformedPacket, "IPv6: version != 6");

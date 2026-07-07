@@ -91,31 +91,6 @@ class Buffer : public BaseObject {
             return true;
         }
 
-        // write a single byte at the current cursor.
-        bool write_u8(uint8_t byte) noexcept {
-            return write(&byte, 1);
-        }
-
-        // write a uint16 in network byte order (big-endian).
-        bool write_u16be(uint16_t val) noexcept {
-            uint8_t buf[2] = {
-                static_cast<uint8_t>(val >> 8),
-                static_cast<uint8_t>(val & 0xff)
-            };
-            return write(buf, 2);
-        }
-
-        // write a uint32 in network byte order (big-endian).
-        bool write_u32be(uint32_t val) noexcept {
-            uint8_t buf[4] = {
-                static_cast<uint8_t>((val >> 24) & 0xff),
-                static_cast<uint8_t>((val >> 16) & 0xff),
-                static_cast<uint8_t>((val >>  8) & 0xff),
-                static_cast<uint8_t>( val        & 0xff)
-            };
-            return write(buf, 4);
-        }
-
         // reserve `n` bytes at current cursor without writing — returns pointer
         // to the reserved region so caller can write directly (e.g. for
         // __attribute__((packed)) struct overlay).
@@ -148,16 +123,6 @@ class Buffer : public BaseObject {
             return true;
         }
 
-        // patch a uint16 in network byte order at absolute pos.
-        // primary use: write computed checksum back into serialized header.
-        bool patch_u16be(uint32_t pos, uint16_t val) noexcept {
-            uint8_t buf[2] = {
-                static_cast<uint8_t>(val >> 8),
-                static_cast<uint8_t>(val & 0xff)
-            };
-            return patch(pos, buf, 2);
-        }
-
         // ── read (dissection path) 
 
         // read `n` bytes from absolute `pos` into `dst`.
@@ -170,23 +135,6 @@ class Buffer : public BaseObject {
             }
             __builtin_memcpy(dst, data_.get() + offset_ + pos, n);
             return true;
-        }
-
-        // read uint16 in network byte order from absolute pos.
-        [[nodiscard]] uint16_t read_u16be(uint32_t pos) const noexcept {
-            if (pos + 2 > len_) return 0;
-            const uint8_t* p = data_.get() + offset_ + pos;
-            return static_cast<uint16_t>((p[0] << 8) | p[1]);
-        }
-
-        // read uint32 in network byte order from absolute pos.
-        [[nodiscard]] uint32_t read_u32be(uint32_t pos) const noexcept {
-            if (pos + 4 > len_) return 0;
-            const uint8_t* p = data_.get() + offset_ + pos;
-            return (static_cast<uint32_t>(p[0]) << 24)
-                | (static_cast<uint32_t>(p[1]) << 16)
-                | (static_cast<uint32_t>(p[2]) <<  8)
-                |  static_cast<uint32_t>(p[3]);
         }
 
         // ── views 

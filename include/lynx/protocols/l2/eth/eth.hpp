@@ -2,16 +2,13 @@
 
 //  Ether — concrete L2 Ethernet II implementation.
 #include "frame.hpp"
-#include "lynx/protocols/hdrs.hpp"
+#include "hdrs.hpp"
 
-namespace lynx::proto 
+namespace lynx::proto
 {
 
 class Ether LYNX_INHERITANCE_POLICY : public Frame {
     public:
-    
-        static constexpr FrameType frame_type = FrameType::Eth;
-
         explicit Ether(const hdrs::HdrEth& h) noexcept
             : hdr_(h) {}
 
@@ -34,7 +31,7 @@ class Ether LYNX_INHERITANCE_POLICY : public Frame {
         {
             // ethertype stored in host order — swap to network order on wire
             hdrs::HdrEth wire = hdr_;
-            wire.ethertype = __builtin_bswap16(hdr_.ethertype);
+            wire.ethertype = swap16(hdr_.ethertype);
     
             buf.write(reinterpret_cast<const uint8_t*>(&wire),
                     sizeof(hdrs::HdrEth));
@@ -51,10 +48,10 @@ class Ether LYNX_INHERITANCE_POLICY : public Frame {
                 return;
             }
     
-            __builtin_memcpy(&hdr_, data, sizeof(hdrs::HdrEth));
+            memory_copy(&hdr_, data, sizeof(hdrs::HdrEth));
     
             // host byte order — no bswap needed at comparison sites
-            hdr_.ethertype = __builtin_bswap16(hdr_.ethertype);
+            hdr_.ethertype = swap16(hdr_.ethertype);
     
             load_ = { data + sizeof(hdrs::HdrEth),
                     len  - sizeof(hdrs::HdrEth) };
@@ -65,6 +62,8 @@ class Ether LYNX_INHERITANCE_POLICY : public Frame {
         }
     
         [[nodiscard]] hdrs::HdrEth* hdr() noexcept override { return &hdr_; }
+
+        FrameType type() const noexcept override { return FrameType::Eth; }
     
     protected:
         hdrs::HdrEth               hdr_{};         // packed header, ethertype in host order

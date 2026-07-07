@@ -1,6 +1,10 @@
 #pragma once
-#include "segment.hpp"
-#include "lynx/protocols/l3/ipv6.hpp"
+
+#include "protocols/l3/ip/ipv6.hpp"
+#include "protocols/l4/segment.hpp"
+#include "hdrs.hpp"
+#include "const.hpp"
+#include <atomic>
 
 namespace lynx::proto {
 
@@ -34,7 +38,7 @@ namespace lynx::proto {
                     set_error(Status::MalformedPacket, "ICMPv6 header too short");
                     return;
                 }
-                __builtin_memcpy(&hdr_, data, sizeof(hdrs::HdrICMP));
+                memory_copy(&hdr_, data, sizeof(hdrs::HdrICMP));
                 swap_hdr_byte_order(hdr_);
 
                 load_ = { data + constants::ICMPV6_HDR_LEN,
@@ -48,8 +52,8 @@ namespace lynx::proto {
             [[nodiscard]] hdrs::HdrICMP* hdr() noexcept override { return &hdr_; }
 
             void swap_hdr_byte_order(hdrs::HdrICMP& hdr) const noexcept {
-                hdr.rest      = __builtin_bswap32(hdr.rest);
-                hdr.checksum  = __builtin_bswap16(hdr.checksum);
+                hdr.rest      = swap32(hdr.rest);
+                hdr.checksum  = swap16(hdr.checksum);
             }
 
             // ICMPv6 pseudo-header needs IPv6 src/dst from underlayer_
@@ -62,7 +66,7 @@ namespace lynx::proto {
 
                 // wire copy — network byte order, checksum zeroed
                 hdrs::HdrICMP wire = hdr_;
-                wire.rest     = __builtin_bswap32(hdr_.rest);
+                wire.rest     = swap32(hdr_.rest);
                 wire.checksum = 0;
 
                 uint32_t icmp6_len = sizeof(hdrs::HdrICMP)
@@ -73,8 +77,8 @@ namespace lynx::proto {
 
                 // IPv6 pseudo-header (RFC 4443)
                 auto* ip6 = static_cast<proto::IPv6*>(ip);
-                __builtin_memcpy(buf +  0, ip6->hdr()->src_ip, 16);
-                __builtin_memcpy(buf + 16, ip6->hdr()->dst_ip, 16);
+                memory_copy(buf +  0, ip6->hdr()->src_ip, 16);
+                memory_copy(buf + 16, ip6->hdr()->dst_ip, 16);
                 buf[32] = static_cast<uint8_t>(icmp6_len >> 24);
                 buf[33] = static_cast<uint8_t>(icmp6_len >> 16);
                 buf[34] = static_cast<uint8_t>(icmp6_len >> 8);
@@ -82,10 +86,11 @@ namespace lynx::proto {
                 // buf[36..38] = 0 (zero-initialized)
                 buf[39] = constants::IP_PROTO_ICMPV6;
 
-                __builtin_memcpy(buf + 40, &wire, sizeof(hdrs::HdrICMP));
-                if (!load_.empty())
-                    __builtin_memcpy(buf + 40 + sizeof(hdrs::HdrICMP),
-                                    load_.data(), load_.size());
+                memory_copy(buf + 40, &wire, sizeof(hdrs::HdrICMP));
+                
+                if (!load_.empty()) {
+                    memory_copy(buf + 40 + sizeof(hdrs::HdrICMP), load_.data(), load_.size());
+                }
 
                 // compute and store back into hdr_ — serialize() will bswap it to wire order
                 hdr_.checksum = utils::inet_checksum(buf, total);

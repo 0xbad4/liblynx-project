@@ -1,0 +1,9 @@
+.local
+.vscode
+build/
+.cache/
+*.o
+*.a
+*.so
+*.dSYM/
+.DS_Store

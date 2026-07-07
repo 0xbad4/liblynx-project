@@ -2,7 +2,10 @@
 
 //  IPv4 — L3 concrete implementation, inherits Packet.
 
-#include "packet.hpp"
+#include "protocols/l3/packet.hpp"
+#include "protocols/l2/eth/const.hpp"
+#include "hdrs.hpp"
+#include "const.hpp"
 
 namespace lynx::proto 
 {
@@ -67,7 +70,7 @@ namespace lynx::proto
                     return;
                 }
 
-                __builtin_memcpy(&hdr_, data, sizeof(hdrs::HdrIPv4));
+                memory_copy(&hdr_, data, sizeof(hdrs::HdrIPv4));
 
                 swap_hdr_byte_order(hdr_);
 
@@ -101,10 +104,10 @@ namespace lynx::proto
             }
 
             void swap_hdr_byte_order(hdrs::HdrIPv4& hdr) const noexcept {
-                hdr.total_len  = __builtin_bswap16(hdr.total_len);
-                hdr.id         = __builtin_bswap16(hdr.id);
-                hdr.flags_frag = __builtin_bswap16(hdr.flags_frag);
-                hdr.checksum   = __builtin_bswap16(hdr.checksum);
+                hdr.total_len  = swap16(hdr.total_len);
+                hdr.id         = swap16(hdr.id);
+                hdr.flags_frag = swap16(hdr.flags_frag);
+                hdr.checksum   = swap16(hdr.checksum);
             }
             
             void patch_checksum() noexcept override {

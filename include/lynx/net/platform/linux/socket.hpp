@@ -4,7 +4,7 @@
 //  all functions are free stateless helpers — no class, no vtable.
 //  every function returns Error. caller checks .ok() and absorbs if needed.
 
-#include "lynx/core/base.hpp"
+#include "core/base.hpp"
 #include "lynx/config.hpp"
 
 #include <fcntl.h>

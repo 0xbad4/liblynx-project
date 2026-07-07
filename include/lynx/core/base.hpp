@@ -1,7 +1,6 @@
 #pragma once
 
 #include "error.hpp"
-#include "constants.hpp"
 #include "utils.hpp"
 #include "common.hpp"
 #include "lynx/config.hpp"

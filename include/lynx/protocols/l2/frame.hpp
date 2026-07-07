@@ -1,8 +1,8 @@
 #pragma once
 
-#include "lynx/core/base.hpp"
-#include "lynx/core/proto_base.hpp"
-#include "lynx/protocols/hdrs.hpp"
+#include "core/base.hpp"
+#include "core/common.hpp"
+#include "core/proto_base.hpp"
 
 namespace lynx::proto
 {
@@ -12,8 +12,10 @@ class Frame;
 //  FrameType
 enum class FrameType : uint8_t {
     Unknown = 0,
-    Eth,        // standard Ethernet II
-    Dot1Q,      // 802.1Q VLAN tagged (ethertype == 0x8100)
+    Eth,         // standard Ethernet II
+    Dot1Q,       // 802.1Q VLAN tagged (ethertype == 0x8100)
+    PPPoE,       // point-to-point protocol (ethertype 0x8863/0x8864)
+    PPP,         // point-to-point protocol (carried inside PPPoE or raw)
 };
  
 
@@ -37,7 +39,7 @@ class RawFrame : public BaseObject {
         void dissect(const uint8_t* data, uint32_t len) noexcept
         {
             // ALL IT SUPPORTS NOW IS ETHERNET, EXPAND IT AND: 
-            // TODO: classify load type
+            // TODO: efficient frame classification for multiple L2 protocols
 
             if (!data || len < constants::ETH_HDR_LEN) {
                 set_error(Status::MalformedPacket, "raw frame too short");
@@ -106,6 +108,8 @@ class RawFrame : public BaseObject {
 class Frame : public ProtocolBaseObject {
     public:
         virtual ~Frame() = default;
+
+        virtual FrameType type() const noexcept = 0;
 };
 
 

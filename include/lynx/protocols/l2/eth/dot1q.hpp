@@ -10,15 +10,14 @@
 //    [12]    dei     — 1 bit  drop eligible indicator
 //    [11:0]  vlan_id — 12 bits VLAN identifier (0-4094)
 
-#include "frame.hpp"
+#include "../frame.hpp"
+#include "hdrs.hpp"
+#include "const.hpp"
 
 namespace lynx::proto {
 
     class Dot1Q LYNX_INHERITANCE_POLICY : public Frame {
         public:
-
-            static constexpr FrameType frame_type = FrameType::Dot1Q;
-
             explicit Dot1Q(const hdrs::HdrDot1Q& h) noexcept : hdr_(h) {}
 
             Dot1Q(const uint8_t dst[6],
@@ -44,9 +43,7 @@ namespace lynx::proto {
             void serialize(Buffer& buf) const noexcept override
             {
                 hdrs::HdrDot1Q wire = hdr_;
-                wire.tpid      = __builtin_bswap16(hdr_.tpid);
-                wire.tci       = __builtin_bswap16(hdr_.tci);
-                wire.ethertype = __builtin_bswap16(hdr_.ethertype);
+                swap_hdr_byte_order(wire);
 
                 buf.write(reinterpret_cast<const uint8_t*>(&wire),
                         sizeof(hdrs::HdrDot1Q));
@@ -63,12 +60,9 @@ namespace lynx::proto {
                     return;
                 }
 
-                __builtin_memcpy(&hdr_, data, sizeof(hdrs::HdrDot1Q));
+                memory_copy(&hdr_, data, sizeof(hdrs::HdrDot1Q));
 
-                // host byte order — accessors and comparisons need no bswap
-                hdr_.tpid      = __builtin_bswap16(hdr_.tpid);
-                hdr_.tci       = __builtin_bswap16(hdr_.tci);
-                hdr_.ethertype = __builtin_bswap16(hdr_.ethertype);
+                swap_hdr_byte_order(hdr_);
 
                 // sanity check — tpid should always be 0x8100
                 if (hdr_.tpid != constants::ETH_TYPE_VLAN) {
@@ -80,12 +74,20 @@ namespace lynx::proto {
                 load_ = { data + sizeof(hdrs::HdrDot1Q),
                         len  - sizeof(hdrs::HdrDot1Q) };
             }
+            
+            void swap_hdr_byte_order(hdrs::HdrDot1Q& hdr) const noexcept {
+                hdr.tpid      = swap16(hdr.tpid);
+                hdr.tci       = swap16(hdr.tci);
+                hdr.ethertype = swap16(hdr.ethertype);
+            }
 
             [[nodiscard]] uint32_t hdr_size() const noexcept override {
                 return static_cast<uint32_t>(sizeof(hdrs::HdrDot1Q));
             }
 
             [[nodiscard]] hdrs::HdrDot1Q* hdr() noexcept override { return &hdr_; }
+
+            FrameType type() const noexcept override { return FrameType::Dot1Q; }
 
         protected:
             hdrs::HdrDot1Q             hdr_{};         // packed header, all fields in host order

@@ -1,7 +1,10 @@
 #pragma once
 
 
-#include "packet.hpp"
+#include "protocols/l3/packet.hpp"
+#include "protocols/l2/eth/const.hpp"
+#include "hdrs.hpp"
+#include "const.hpp"
 
 namespace lynx::proto
 {
@@ -37,7 +40,7 @@ namespace lynx::proto
                 hdr_.ptype = constants::ETH_TYPE_IPV4;
                 hdr_.hlen  = constants::ARP_HLEN_ETH;
                 hdr_.plen  = constants::ARP_PLEN_IPV4;
-                hdr_.oper = constants::ARP_OP_REQUEST;
+                hdr_.oper  = constants::ARP_OP_REQUEST;
             }
 
             ~ARP() = default;
@@ -60,7 +63,7 @@ namespace lynx::proto
                     return;
                 }
 
-                __builtin_memcpy(&hdr_, data, sizeof(hdrs::HdrARP));
+                memory_copy(&hdr_, data, sizeof(hdrs::HdrARP));
                 swap_hdr_byte_order(hdr_);
 
                 if (hdr_.hlen != constants::ARP_HLEN_ETH || hdr_.plen != constants::ARP_PLEN_IPV4) {
@@ -96,9 +99,9 @@ namespace lynx::proto
             }
 
             void swap_hdr_byte_order(hdrs::HdrARP& hdr) const noexcept {
-                hdr.htype = __builtin_bswap16(hdr.htype);
-                hdr.ptype = __builtin_bswap16(hdr.ptype);
-                hdr.oper  = __builtin_bswap16(hdr.oper);
+                hdr.htype = swap16(hdr.htype);
+                hdr.ptype = swap16(hdr.ptype);
+                hdr.oper  = swap16(hdr.oper);
             }
 
             [[nodiscard]] bool is_broadcast() const noexcept { return true; }

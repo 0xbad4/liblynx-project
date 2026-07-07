@@ -1,6 +1,10 @@
 #pragma once
 
-#include "segment.hpp"
+#include "protocols/l3/ip/const.hpp"
+#include "protocols/l4/segment.hpp"
+#include "hdrs.hpp"
+#include "const.hpp"
+
 
 namespace lynx::proto
 {
@@ -21,7 +25,7 @@ namespace lynx::proto
             void serialize(Buffer&buf) const noexcept override {
                 hdrs::HdrIGMP wire = hdr_;
 
-                wire.checksum = __builtin_bswap16(wire.checksum);
+                wire.checksum = swap16(wire.checksum);
 
                 buf.write(
                     reinterpret_cast<const uint8_t*>(&wire), sizeof(hdrs::HdrIGMP)
@@ -38,9 +42,9 @@ namespace lynx::proto
                     return;
                 }
 
-                __builtin_memcpy(&hdr_, data, sizeof(hdrs::HdrIGMP));
+                memory_copy(&hdr_, data, sizeof(hdrs::HdrIGMP));
 
-                hdr_.checksum  = __builtin_bswap16(hdr_.checksum);
+                hdr_.checksum  = swap16(hdr_.checksum);
 
                 uint32_t hdr_bytes = hdr_size();
 
@@ -63,10 +67,10 @@ namespace lynx::proto
                 uint32_t total = size();
                 
                 uint8_t buf[total];
-                __builtin_memcpy(buf, &hdr_, sizeof(hdrs::HdrIGMP));
+                memory_copy(buf, &hdr_, sizeof(hdrs::HdrIGMP));
 
                 if (!load_.empty())
-                    __builtin_memcpy(buf + sizeof(hdrs::HdrIGMP), load_.data(), load_.size());
+                    memory_copy(buf + sizeof(hdrs::HdrIGMP), load_.data(), load_.size());
 
                 hdr_.checksum = utils::inet_checksum(buf, total);
             }

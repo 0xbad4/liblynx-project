@@ -13,10 +13,9 @@
 //  can pull out any layer they care about via frame.layer<IPv4>() etc.
 
 #include "lynx/config.hpp"
-#include "lynx/core/error.hpp"
-#include "lynx/core/constants.hpp"
-#include "lynx/core/buffer.hpp"
-#include "lynx/protocols/all.hpp"
+#include "core/error.hpp"
+#include "core/buffer.hpp"
+#include "protocols/all.hpp"
 
 #include "./socket.hpp"
 

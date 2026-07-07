@@ -1,6 +1,9 @@
 #pragma once
 
-#include "segment.hpp"
+#include "protocols/l3/ip/const.hpp"
+#include "protocols/l4/segment.hpp"
+#include "hdrs.hpp"
+#include "const.hpp"
 
 namespace lynx::proto
 {
@@ -40,7 +43,7 @@ namespace lynx::proto
                     return;
                 }
 
-                __builtin_memcpy(&hdr_, data, sizeof(hdrs::HdrICMP));
+                memory_copy(&hdr_, data, sizeof(hdrs::HdrICMP));
 
                 swap_hdr_byte_order(hdr_);
 
@@ -56,8 +59,8 @@ namespace lynx::proto
             [[nodiscard]] hdrs::HdrICMP* hdr() noexcept override { return &hdr_; }
 
             void swap_hdr_byte_order(hdrs::HdrICMP& hdr) const noexcept {
-                hdr.rest      = __builtin_bswap32(hdr.rest);
-                hdr.checksum  = __builtin_bswap16(hdr.checksum);
+                hdr.rest      = swap32(hdr.rest);
+                hdr.checksum  = swap16(hdr.checksum);
             }
             
             void patch_checksum() noexcept override {
@@ -71,10 +74,10 @@ namespace lynx::proto
                 
                 // stack buffer — ICMP max is small, safe here
                 uint8_t buf[total];
-                __builtin_memcpy(buf, &wire, sizeof(hdrs::HdrICMP));
+                memory_copy(buf, &wire, sizeof(hdrs::HdrICMP));
 
                 if (!load_.empty())
-                    __builtin_memcpy(buf + sizeof(hdrs::HdrICMP), load_.data(), load_.size());
+                    memory_copy(buf + sizeof(hdrs::HdrICMP), load_.data(), load_.size());
 
                 hdr_.checksum = utils::inet_checksum(buf, total);
             }

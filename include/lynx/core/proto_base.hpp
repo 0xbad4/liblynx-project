@@ -3,6 +3,63 @@
 #include "buffer.hpp"
 
 
+// ── memory model: capture, edit, resend ─────────────────────────────────
+//
+// when a packet is captured, every dissected layer's load_ is a *borrowed*
+// span into the single recv buffer owned by the capture loop (or by
+// RawFrame, if you hold one). no bytes are copied at dissect time — this
+// is what makes capture cheap regardless of how many layers you walk with
+// as<T>(). it also means load_ is only valid for as long as that root
+// buffer is alive, which in practice means: for the duration of the
+// capture() callback that produced it.
+//
+// editing a layer (add_option(), set_message(), or any mutator)
+// never writes through that borrowed view. instead it allocates a fresh,
+// independently-owned buffer, writes the new content into it, and
+// re-points this layer's load_ at the new buffer. the bytes the old
+// load_ used to reference are left completely untouched in the original
+// slab — they are not freed, not modified, not reused by this call.
+// their lifetime is governed entirely by whoever owns that slab (the
+// capture loop, typically), not by this object.
+//
+// this is a deliberate design choice, not an oversight. an in-place
+// editable view would require every layer's bytes to live in disjoint,
+// independently-sized regions, but they don't — Eth.load_, IP.load_, and
+// TCP.load_ are all views over the *same* shared bytes at increasing
+// offsets, not separate allocations. if you swap IPv4 for a
+// differently-sized header (e.g. ARP, or IPv4 with options) and write
+// the replacement through an in-place view, you silently overwrite
+// whatever sits immediately after it in the slab — typically the next
+// layer's header or payload — with no mechanism to detect or prevent it.
+// allocating a new owned buffer on every edit removes this hazard
+// entirely: a layer can never corrupt memory another layer believes it
+// owns, regardless of how header sizes change across the edit.
+//
+// practical consequence — capture/edit/resend within one callback is
+// always safe and requires no special handling:
+//
+//   iface.capture([&](const RawFrame& raw) {
+//       auto chap = ppp->as<CHAP>();
+//       chap->set_message(reply, reply_len);   // owned buffer, safe
+//       iface.send(*chap);                      // slab still alive here
+//       return RecvAction::Continue;
+//   });
+//
+// if you need to retain a dissected object — or resend it — *outside*
+// the callback that produced it, the root slab may already have been
+// reused or freed by then, and any layer still borrowing from it (one
+// you never called a mutator on) would read stale or invalid memory.
+// call materialize() before storing the object anywhere longer-lived:
+//
+//   auto chap = ppp->as<CHAP>();
+//   chap->materialize();      // copies load_ into owned storage now
+//   stash_for_later(std::move(chap));
+//
+// materialize() is a cheap no-op if load_ is already owned (e.g. you
+// already called a mutator on this object) — it only allocates when
+// load_ is still a borrowed view.
+
+
 namespace lynx
 {
     //  ProtocolBaseObject
@@ -28,9 +85,28 @@ namespace lynx
             [[nodiscard]] virtual void* hdr() noexcept = 0;
         
             // payload
-        
+
             [[nodiscard]] const_view_t load() const noexcept {
                 return load_;
+            }
+
+            // promotes load_ from a borrowed view into owned storage.
+            // call this if you need to keep this object, or resend it, beyond the
+            // scope of the capture callback that produced it. cheap no-op if load_
+            // is already owned (e.g. after add_option / set_message).
+            void materialize() noexcept
+            {
+                if (load_.empty() || load_buf_.ok()) return;   // nothing to do, or already owned
+
+                Buffer fresh = Buffer::alloc(static_cast<uint32_t>(load_.size()));
+                
+                if (!fresh.ok()) { 
+                    set_error(Status::BufferAllocFail, "materialize failed"); 
+                    return; 
+                }
+                fresh.write(load_.data(), static_cast<uint32_t>(load_.size()));
+                load_buf_ = std::move(fresh);
+                load_     = { load_buf_.begin(), load_buf_.len() };
             }
 
             void set_load(const_view_t payload) noexcept {
@@ -47,7 +123,7 @@ namespace lynx
                         return;
                     }
 
-                    __builtin_memcpy(owned_load_.get(), payload.data(), payload.size());
+                    memory_copy(owned_load_.get(), payload.data(), payload.size());
                     load_ = { owned_load_.get(), payload.size() };
             }
         
@@ -75,8 +151,8 @@ namespace lynx
             //   1. serialize rhs (which recursively includes rhs's own load) into
             //      a fresh Buffer of rhs.size() bytes
             //   2. store that Buffer as this layer's load via set_load()
-            //   3. return *this so chaining works left-to-rightw
-            // if a change made in upper layer it wont afftect this load
+            //   3. return *this so chaining works left-to-right
+            // if a change made in upper layer it wont affect this load
 
             ProtocolBaseObject& operator/(ProtocolBaseObject& rhs) noexcept {
                 Buffer buf = Buffer::alloc(rhs.size());
@@ -110,11 +186,31 @@ namespace lynx
             // default no-op — layers that need no checksum (Ether, Dot1Q) skip override.
             virtual void patch_checksum() noexcept {}
 
+            // swap
+            [[nodiscard]] uint16_t swap16(uint16_t value) const noexcept {
+                return utils::bswap(value);
+            }
+
+            [[nodiscard]] uint32_t swap32(uint32_t value) const noexcept {
+                return utils::bswap(value);
+            }
+
+            [[nodiscard]] uint64_t swap64(uint64_t value) const noexcept {
+                return utils::bswap(value);
+            }
+
+            void memory_copy(void* dst, const void* src, size_t size) const noexcept {
+                utils::mcopy(dst, src, size);
+            }
+
         protected:
             // set when capturing packets
             const_view_t   load_{};
+            Buffer load_buf_;
+
             // set when crafting packets 
             std::shared_ptr<uint8_t[]> owned_load_;
+            
             // underlayer access
             ProtocolBaseObject* underlayer_ = nullptr;
     };

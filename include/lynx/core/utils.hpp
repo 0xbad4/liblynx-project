@@ -190,5 +190,52 @@ namespace lynx {
             return std::span<uint8_t>(buf, len);
         }
 
+        namespace detail {
+            // 256-entry CRC-32c lookup table, generated once at compile/load time
+            // using the Castagnoli polynomial (0x1EDC6F41, reversed: 0x82F63B78).
+            inline constexpr std::array<uint32_t, 256> make_crc32c_table() noexcept
+            {
+                std::array<uint32_t, 256> table{};
+                for (uint32_t i = 0; i < 256; ++i) {
+                    uint32_t c = i;
+                    for (int j = 0; j < 8; ++j)
+                        c = (c & 1) ? (0x82F63B78u ^ (c >> 1)) : (c >> 1);
+                    table[i] = c;
+                }
+                return table;
+            }
+
+            inline constexpr auto crc32c_table = make_crc32c_table();
+        } // namespace detail
+
+        // computes CRC-32c over data — used exclusively by SCTP::patch_checksum().
+        // not related to utils::inet_checksum, which is RFC 1071 one's complement.
+        [[nodiscard]] inline uint32_t crc32c(const uint8_t* data, uint32_t len) noexcept
+        {
+            uint32_t crc = constants::SCTP_CRC32C_INIT;
+            for (uint32_t i = 0; i < len; ++i)
+                crc = detail::crc32c_table[(crc ^ data[i]) & 0xFF] ^ (crc >> 8);
+            return ~crc;
+        }
+
+        // byte swap
+        // std::byteswap is constexpr and works on any unsigned integer type.
+        // the compiler emits a single bswap / rev instruction on x86 / ARM.
+
+        template<typename T>
+        requires std::unsigned_integral<T>
+        [[nodiscard]] static constexpr T bswap(T value) noexcept {
+            return std::byteswap(value);
+        }
+
+        // ── memory copy
+        // thin wrapper kept for symmetry — compilers inline this to a single
+        // move or rep movsb regardless of whether you call memcpy directly.
+
+        static void mcopy(void* dst, const void* src, size_t size) noexcept {
+            std::memcpy(dst, src, size);
+        }
+
+
     }
 } // namespace lynx::utils

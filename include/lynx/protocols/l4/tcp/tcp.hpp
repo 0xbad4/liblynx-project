@@ -1,7 +1,11 @@
 #pragma once
 
-
 #include "segment.hpp"
+#include "protocols/l3/ip/ipv4.hpp"
+#include "protocols/l3/ip/ipv6.hpp"
+#include "hdrs.hpp"
+#include "const.hpp"
+
 
 namespace lynx::proto
 {
@@ -49,14 +53,7 @@ namespace lynx::proto
             void serialize(Buffer&buf) const noexcept override {
                 hdrs::HdrTCP wire = hdr_;
 
-                wire.src_port = __builtin_bswap16(wire.src_port);
-                wire.dst_port = __builtin_bswap16(wire.dst_port);
-                wire.ack      = __builtin_bswap32(wire.ack);
-                wire.seq      = __builtin_bswap32(wire.seq);
-                wire.window   = __builtin_bswap16(wire.window);
-                wire.checksum = __builtin_bswap16(wire.checksum);
-                wire.urg_ptr  = __builtin_bswap16(wire.urg_ptr);
-
+                swap_hdr_byte_order(wire);
                 buf.write(
                     reinterpret_cast<const uint8_t*>(&wire), sizeof(hdrs::HdrTCP)
                 );
@@ -72,7 +69,7 @@ namespace lynx::proto
                     return;
                 }
 
-                __builtin_memcpy(&hdr_, data, sizeof(hdrs::HdrTCP));
+                memory_copy(&hdr_, data, sizeof(hdrs::HdrTCP));
 
                 swap_hdr_byte_order(hdr_);
 
@@ -92,13 +89,13 @@ namespace lynx::proto
             [[nodiscard]] hdrs::HdrTCP* hdr() noexcept override { return &hdr_; }
 
             void swap_hdr_byte_order(hdrs::HdrTCP& hdr) const noexcept {
-                hdr.src_port = __builtin_bswap16(hdr.src_port);
-                hdr.dst_port = __builtin_bswap16(hdr.dst_port);
-                hdr.seq = __builtin_bswap32(hdr.seq);
-                hdr.ack = __builtin_bswap32(hdr.ack);
-                hdr.window = __builtin_bswap16(hdr.window);
-                hdr.checksum = __builtin_bswap16(hdr.checksum);
-                hdr.urg_ptr = __builtin_bswap16(hdr.urg_ptr);
+                hdr.src_port = swap16(hdr.src_port);
+                hdr.dst_port = swap16(hdr.dst_port);
+                hdr.seq = swap32(hdr.seq);
+                hdr.ack = swap32(hdr.ack);
+                hdr.window = swap16(hdr.window);
+                hdr.checksum = swap16(hdr.checksum);
+                hdr.urg_ptr = swap16(hdr.urg_ptr);
             }
             
             void patch_checksum() noexcept override {
@@ -117,17 +114,17 @@ namespace lynx::proto
                     uint32_t total = 12 + tcp_len;
                     uint8_t  buf[total];
 
-                    __builtin_memcpy(buf + 0, ip4->hdr()->src_ip, 4);
-                    __builtin_memcpy(buf + 4, ip4->hdr()->dst_ip, 4);
+                    memory_copy(buf + 0, ip4->hdr()->src_ip, 4);
+                    memory_copy(buf + 4, ip4->hdr()->dst_ip, 4);
 
                     buf[8]  = 0;
                     buf[9]  = constants::IP_PROTO_TCP;
                     buf[10] = static_cast<uint8_t>(tcp_len >> 8);
                     buf[11] = static_cast<uint8_t>(tcp_len & 0xff);
 
-                    __builtin_memcpy(buf + 12, &wire, sizeof(hdrs::HdrTCP));
+                    memory_copy(buf + 12, &wire, sizeof(hdrs::HdrTCP));
                     if (!load_.empty())
-                        __builtin_memcpy(buf + 12 + sizeof(hdrs::HdrTCP),
+                        memory_copy(buf + 12 + sizeof(hdrs::HdrTCP),
                                         load_.data(), load_.size());
 
                     hdr_.checksum = utils::inet_checksum(buf, total);
@@ -137,8 +134,8 @@ namespace lynx::proto
                     uint32_t total = 40 + tcp_len;
                     uint8_t  buf[total]{};
 
-                    __builtin_memcpy(buf +  0, ip6->hdr()->src_ip, 16);
-                    __builtin_memcpy(buf + 16, ip6->hdr()->dst_ip, 16);
+                    memory_copy(buf +  0, ip6->hdr()->src_ip, 16);
+                    memory_copy(buf + 16, ip6->hdr()->dst_ip, 16);
 
                     buf[32] = static_cast<uint8_t>(tcp_len >> 24);
                     buf[33] = static_cast<uint8_t>(tcp_len >> 16);
@@ -147,9 +144,9 @@ namespace lynx::proto
 
                     buf[39] = constants::IP_PROTO_TCP;
 
-                    __builtin_memcpy(buf + 40, &wire, sizeof(hdrs::HdrTCP));
+                    memory_copy(buf + 40, &wire, sizeof(hdrs::HdrTCP));
                     if (!load_.empty())
-                        __builtin_memcpy(buf + 40 + sizeof(hdrs::HdrTCP),
+                        memory_copy(buf + 40 + sizeof(hdrs::HdrTCP),
                                         load_.data(), load_.size());
 
                     hdr_.checksum = utils::inet_checksum(buf, total);

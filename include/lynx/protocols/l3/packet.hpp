@@ -1,9 +1,8 @@
 #pragma once
 
 
-#include "lynx/core/base.hpp"
-#include "lynx/core/proto_base.hpp"
-#include "lynx/protocols/hdrs.hpp"
+#include "core/base.hpp"
+#include "core/proto_base.hpp"
 
 namespace lynx::proto
 {

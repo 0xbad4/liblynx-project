@@ -49,6 +49,7 @@ enum class Status : uint8_t {
     SerializeFail       = 70,   // layer serialize() could not write to Buffer
     MissingLayer        = 71,   // required lower layer absent (e.g. no IPv4
                                 //   when computing TCP pseudo-header)
+    InvalidState        = 72,   // layer state does not allow requested operation
 
     // ── generic
     InvalidArgument     = 90,   // null pointer, zero length, bad enum value
