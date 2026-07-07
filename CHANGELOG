@@ -4,6 +4,7 @@
 
 - replace `__builtin_bswap` with `utils::bswap` to avoid compiler.
 - updated test cases.
+- updated project architecture.
 
 ## Added
 
