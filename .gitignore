@@ -7,3 +7,5 @@ build/
 *.so
 *.dSYM/
 .DS_Store
+TODO
+**/output

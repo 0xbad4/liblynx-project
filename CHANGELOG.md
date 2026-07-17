@@ -2,14 +2,16 @@
 
 ## Changed
 
-- replace `__builtin_bswap` with `utils::bswap` to avoid compiler.
+- replace `__builtin_bswap` with `utils::bswap`.
 - updated test cases.
-- updated project architecture.
+- project structure.
 
 ## Added
 
 > Please note that the following protocols have not been extensively tested in this release and are provided as-is.
 
-- PPP with its subprotocols
-- PPPoE
-- SCTP
+- PROTOCOL: PPP with its subprotocols
+- PROTOCOL: PPPoE
+- PROTOCOL: SCTP
+- documentation
+- more examples

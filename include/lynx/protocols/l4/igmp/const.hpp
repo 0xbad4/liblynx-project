@@ -5,7 +5,8 @@
 namespace lynx::constants
 {
     //  IGMP — header size
-
+    inline constexpr uint8_t IP_PROTO_IGMP   =   2;    // Internet Group Management
+    
     inline constexpr uint32_t IGMP_HDR_LEN = 8;  // v1/v2 base: type(1)+resp(1)+chk(2)+grp(4)
 
     //  IGMP — type values (proto=2, rides over IPv4)

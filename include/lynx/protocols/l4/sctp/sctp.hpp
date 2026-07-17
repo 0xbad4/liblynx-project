@@ -1,9 +1,9 @@
 #pragma once
 
-#include "protocols/l4/segment.hpp"
+#include "lynx/protocols/l4/segment.hpp"
 #include "hdrs.hpp"
 #include "const.hpp"
-#include "core/utils.hpp"
+#include "lynx/core/utils.hpp"
 
 
 namespace lynx::proto

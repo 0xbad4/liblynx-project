@@ -1,8 +1,8 @@
 #pragma once
 
 
-#include "protocols/l3/packet.hpp"
-#include "protocols/l2/eth/const.hpp"
+#include "lynx/protocols/l3/packet.hpp"
+#include "lynx/protocols/l2/eth/const.hpp"
 #include "hdrs.hpp"
 #include "const.hpp"
 

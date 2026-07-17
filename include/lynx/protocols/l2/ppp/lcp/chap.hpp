@@ -23,7 +23,7 @@
 //    CHAP chap(CHAP_CODE_CHALLENGE, 1);
 //    chap / Raw(body, sizeof(body));
 
-#include "protocols/l2/ppp/tlv_base.hpp"
+#include "lynx/protocols/l2/ppp/tlv_base.hpp"
 
 namespace lynx::proto
 {

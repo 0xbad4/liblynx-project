@@ -1,8 +1,9 @@
 #pragma once
 
 //  Ether — concrete L2 Ethernet II implementation.
-#include "frame.hpp"
+#include "lynx/protocols/l2/frame.hpp"
 #include "hdrs.hpp"
+#include "const.hpp"
 
 namespace lynx::proto
 {

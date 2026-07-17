@@ -26,8 +26,8 @@
 //    pap / Raw(body, sizeof(body));
 
 
-#include "protocols/l2/frame.hpp"
-#include "protocols/l2/ppp/hdrs.hpp"
+#include "lynx/protocols/l2/frame.hpp"
+#include "lynx/protocols/l2/ppp/hdrs.hpp"
 
 
 namespace lynx::proto

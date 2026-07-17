@@ -10,7 +10,7 @@
 //    [12]    dei     — 1 bit  drop eligible indicator
 //    [11:0]  vlan_id — 12 bits VLAN identifier (0-4094)
 
-#include "../frame.hpp"
+#include "lynx/protocols/l2/frame.hpp"
 #include "hdrs.hpp"
 #include "const.hpp"
 

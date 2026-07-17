@@ -1,7 +1,7 @@
 #pragma once
 
-#include "protocols/l3/ip/const.hpp"
-#include "protocols/l4/segment.hpp"
+#include "lynx/protocols/l3/ip/const.hpp"
+#include "lynx/protocols/l4/segment.hpp"
 #include "hdrs.hpp"
 #include "const.hpp"
 

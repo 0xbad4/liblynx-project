@@ -1,8 +1,9 @@
 #pragma once
 
-#include "core/base.hpp"
-#include "core/common.hpp"
-#include "core/proto_base.hpp"
+#include "lynx/core/base.hpp"
+#include "lynx/core/common.hpp"
+#include "lynx/core/proto_base.hpp"
+#include "lynx/protocols/l2/eth/const.hpp"
 
 namespace lynx::proto
 {

@@ -3,7 +3,7 @@
 // Functions that are shared between LCP, IPCP, and IPv6CP.
 
 
-#include "protocols/l2/frame.hpp"
+#include "lynx/protocols/l2/frame.hpp"
 #include "hdrs.hpp"
 
 

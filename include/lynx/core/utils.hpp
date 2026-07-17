@@ -212,7 +212,7 @@ namespace lynx {
         // not related to utils::inet_checksum, which is RFC 1071 one's complement.
         [[nodiscard]] inline uint32_t crc32c(const uint8_t* data, uint32_t len) noexcept
         {
-            uint32_t crc = constants::SCTP_CRC32C_INIT;
+            uint32_t crc = CRC32C_INIT;
             for (uint32_t i = 0; i < len; ++i)
                 crc = detail::crc32c_table[(crc ^ data[i]) & 0xFF] ^ (crc >> 8);
             return ~crc;

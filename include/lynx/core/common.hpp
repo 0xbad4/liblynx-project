@@ -15,4 +15,8 @@ namespace lynx
     #define view_t std::span<uint8_t>
     #define LYNX_PACKED struct __attribute__((packed))
 
+    // CRC-32c
+    inline constexpr uint32_t CRC32C_POLY  = 0x1EDC6F41;
+    inline constexpr uint32_t CRC32C_INIT  = 0xFFFFFFFF;
+
 } // namespace lynx

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/common.hpp"
+#include "lynx/core/common.hpp"
 #include "const.hpp"
 
 namespace lynx::hdrs

@@ -21,7 +21,7 @@
 //    PPP ppp(PPP_ADDRESS, PPP_CONTROL, PPP_PROTO_IPCP);
 //    ppp / ipcp;
 
-#include "protocols/l2/ppp/tlv_base.hpp"
+#include "lynx/protocols/l2/ppp/tlv_base.hpp"
 
 
 

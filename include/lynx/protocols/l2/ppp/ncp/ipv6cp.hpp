@@ -7,7 +7,7 @@
 //
 //  same header layout as LCP and IPCP.
 
-#include "protocols/l2/ppp/tlv_base.hpp"
+#include "lynx/protocols/l2/ppp/tlv_base.hpp"
 
 namespace lynx::proto
 {

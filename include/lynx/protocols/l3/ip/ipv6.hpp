@@ -3,8 +3,8 @@
 
 //  IPv6 — L3 concrete implementation, inherits Packet.
 
-#include "protocols/l3/packet.hpp"
-#include "protocols/l2/eth/const.hpp"
+#include "lynx/protocols/l3/packet.hpp"
+#include "lynx/protocols/l2/eth/const.hpp"
 #include "hdrs.hpp"
 #include "const.hpp"
 

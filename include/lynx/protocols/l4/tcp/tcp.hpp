@@ -1,8 +1,8 @@
 #pragma once
 
-#include "segment.hpp"
-#include "protocols/l3/ip/ipv4.hpp"
-#include "protocols/l3/ip/ipv6.hpp"
+#include "lynx/protocols/l4/segment.hpp"
+#include "lynx/protocols/l3/ip/ipv4.hpp"
+#include "lynx/protocols/l3/ip/ipv6.hpp"
 #include "hdrs.hpp"
 #include "const.hpp"
 

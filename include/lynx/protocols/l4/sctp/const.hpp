@@ -8,8 +8,8 @@ namespace lynx::constants
     inline constexpr uint8_t IP_PROTO_SCTP        = 132;
 
     //  SCTP - header size
-    inline consteval uint32_t SCTP_HDR_LEN       = 12;
-    inline consteval uint32_t SCTP_CHUNK_HDR_LEN = 4;
+    inline constexpr uint32_t SCTP_HDR_LEN       = 12;
+    inline constexpr uint32_t SCTP_CHUNK_HDR_LEN = 4;
 
     // SCTP - chunk types
     inline constexpr uint8_t  SCTP_CHUNK_DATA          = 0;
@@ -35,9 +35,5 @@ namespace lynx::constants
     inline constexpr uint16_t SCTP_DEFAULT_OUT_STREAMS = 10;
     inline constexpr uint16_t SCTP_DEFAULT_IN_STREAMS  = 65535;
     inline constexpr uint32_t SCTP_DEFAULT_RWND        = 106496; // 104KB, common default
-
-    // CRC-32c
-    inline constexpr uint32_t SCTP_CRC32C_POLY  = 0x1EDC6F41;
-    inline constexpr uint32_t SCTP_CRC32C_INIT  = 0xFFFFFFFF;
 
 } // namespace lynx::constants
